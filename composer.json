@@ -1,0 +1,29 @@
+{
+	"name": "perry-rylance/datatable",
+	
+	"version": "0.0.1alpha",
+	"minimum-stability": "stable",
+	
+	"description": "This library handles client and server side record fetching, including search, sort and pagination. Please note that this package is still under development and is not usable presently. I expect this to be ready within the week.",
+	
+	"type": "library",
+	"keywords": ["DataTables"],
+	"homepage": "https://perryrylance.com",
+	"license": "MIT",
+	
+	"authors": [
+		{
+			"name": "Perry Rylance",
+			"email": "contact@perryrylance.com",
+			"homepage": "https://perryrylance.com",
+			"role": "Developer"
+		}
+	],
+
+    "require": {
+		"php": ">=5.4.0",
+        "illuminate/database": "^7.24",
+        "perry-rylance/dom-document": "^1.0",
+        "illuminate/http": "^7.24"
+    }
+}
