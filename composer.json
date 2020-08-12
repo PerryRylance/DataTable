@@ -25,5 +25,11 @@
         "illuminate/database": "^7.24",
         "perry-rylance/dom-document": "^1.0",
         "illuminate/http": "^7.24"
-    }
+    },
+	
+	"autoload": {
+		"psr-4": {
+			"PerryRylance\\": "src"
+		}
+	}
 }
