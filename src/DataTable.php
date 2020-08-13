@@ -2,10 +2,10 @@
 
 namespace PerryRylance;
 
-use PerryRylance\DOMDocument;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Query\Builder;
+use PerryRylance\DOMDocument;
 
 abstract class DataTable extends DOMDocument
 {
@@ -19,7 +19,7 @@ abstract class DataTable extends DOMDocument
 	 * Constructor for the DataTable
 	 * @param Array $options
 	 */
-	public function __construct(Array $options=[])
+	public function __construct($request, Array $options=[])
 	{
 		DOMDocument::__construct();
 		
@@ -39,11 +39,22 @@ abstract class DataTable extends DOMDocument
 			$this->excludeColumns = $arr;
 		}
 		
-		$this->initDocument();
+		if(!($request instanceof Request && $request->wantsJson()))
+			$this->initDocument();
 	}
 	
 	abstract public function getTableName();
 	abstract public function getRoute();
+	
+	public static function getLibraryScriptFilename()
+	{
+		return dirname(__DIR__) . '/lib/jquery.dataTables.min.js';
+	}
+	
+	public static function getLibraryStyleFilename()
+	{
+		return dirname(__DIR__) . '/lib/jquery.dataTables.min.css';
+	}
 	
 	public function getScriptFilename()
 	{
@@ -126,15 +137,21 @@ EOD
 		return preg_match('/^VARCHAR|TEXT$|^INT/i', $type);
 	}
 	
-	protected function applySearch(Request $request, Builder $query)
+	protected function applySearch(Request $request, Builder $builder)
 	{
 		if(!$request->has("search"))
 			return;
 		
 		// TODO: Support JSON input (including value and regex)
 		// TODO: Support multiple, space separated words
+		// TODO: Support REGEXP
 		
-		$keyword	= $request->input("search");
+		$search		= $request->input("search");
+		$keyword	= $search['value'];
+		
+		if(empty($keyword))
+			return;
+		
 		$context	= $this->getSearchContext();
 		$arr		= [];
 		
@@ -143,50 +160,63 @@ EOD
 			if(!$this->isColumnSearchable($obj['type']))
 				continue;
 			
-			$query->$context($key, "LIKE", "%$keyword%");
+			$builder->$context($key, "LIKE", "%$keyword%");
 		}
 	}
 	
-	protected function applyOrder(Request $request, Builder $query)
+	protected function applyOrder(Request $request, Builder $builder)
 	{
 		if(!$request->has("order"))
 			return;
 		
-		// TODO: Test this
+		// TODO: Support multiple sorts, not just $first
 		
 		$columns	= $this->getColumns();
 		$keys		= array_keys($columns);
-		$index		= $request->input("order");
-		$dir		= "asc";	// TODO: Get this from request
+		$first		= $request->input("order")[0];
+		$index		= $first['column'];
+		$dir		= $first['dir'];
 		
-		$query->orderBy($keys[$index], $dir);
+		// TODO: Security test, may need to whitelist
+		
+		$builder->orderBy($keys[$index], $dir);
 	}
 	
-	protected function applyLimit(Request $request, Builder $query)
+	protected function applyLimit(Request $request, Builder $builder)
 	{
 		if($request->has("start"))
-			$query->offset($request->input("start"));
+			$builder->offset($request->input("start"));
 		
 		if($request->has("length"))
-			$query->limit($request->input("length"));
+			$builder->limit($request->input("length"));
 	}
 	
-	public function getQuery(Request $request)
+	public function getBuilder(Request $request)
 	{
-		$query		= DB::table( $this->getTableName() )->
+		$builder		= DB::table( $this->getTableName() )->
 			select( array_keys($this->getColumns()) );
 		
-		$this->applySearch($request, $query);
-		$this->applyOrder($request, $query);
-		$this->applyLimit($request, $query);
+		$this->applySearch($request, $builder);
+		$this->applyOrder($request, $builder);
+		$this->applyLimit($request, $builder);
 		
-		return $query;
+		return $builder;
 	}
 	
 	public function getRecords(Request $request)
 	{
-		$query		= $this->getQuery($request);
+		$builder		= $this->getBuilder($request);
+		$result			= [
+			'data'	=> $builder->get()->toArray()
+		];
 		
-		return $query->get()->toArray();
+		if(env('APP_DEBUG'))
+		{
+			$result['debug'] = [
+				'sql'			=> $builder->toSql()
+			];
+		}
+		
+		return $result;
 	}
 }

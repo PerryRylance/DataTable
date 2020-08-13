@@ -1,7 +1,7 @@
 {
 	"name": "perry-rylance/datatable",
 	
-	"version": "0.0.1alpha",
+	"version": "1.0.2alpha",
 	"minimum-stability": "stable",
 	
 	"description": "This library handles client and server side record fetching, including search, sort and pagination. Please note that this package is still under development and is not usable presently. I expect this to be ready within the week.",
