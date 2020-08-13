@@ -2,7 +2,7 @@
 
 This library handles client and server side record fetching, including search, sort and pagination.
 
-A script file is provided for convenience which will automatically set up the tables client side also. Feel free to write your own, or extend `PerryRylance.DataTables.DataTable` by overriding `createInstance`.
+A script file is provided for convenience which will automatically set up the tables client side also. Feel free to write your own, or extend `PerryRylance.DataTable` by overriding `createInstance`.
 
 ## Requirements
 
@@ -17,7 +17,7 @@ I recommend installing this via Composer:
 
 ## Usage
 
-- Make a subclass of `PerryRylance\DataTables\DataTable`.
+- Make a subclass of `PerryRylance\DataTable`.
 - You must implement the abstract method `getTableName`.
 - You must also implement the abstract method `getRoute`.
 - For Laravel / Lumen, in `api.php`, instantiate your subclass, call `registerRoute` to register the route.
