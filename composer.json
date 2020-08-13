@@ -23,7 +23,7 @@
     "require": {
 		"php": ">=5.4.0",
         "illuminate/database": "^7.24",
-        "perry-rylance/dom-document": "^1.0",
+        "perry-rylance/dom-document": "dev-master",
         "illuminate/http": "^7.24"
     },
 	
