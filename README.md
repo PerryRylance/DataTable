@@ -20,5 +20,3 @@ I recommend installing this via Composer:
 - Make a subclass of `PerryRylance\DataTable`.
 - You must implement the abstract method `getTableName`.
 - You must also implement the abstract method `getRoute`.
-- For Laravel / Lumen, in `api.php`, instantiate your subclass, call `registerRoute` to register the route.
-- Make sure the script specified by `getScriptFilename` is loaded. *You will need to convert this from a filename to a URL*.
