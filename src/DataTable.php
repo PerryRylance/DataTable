@@ -46,7 +46,8 @@ abstract class DataTable extends DOMDocument
 	abstract public function getTableName();
 	abstract public function getRoute();
 	
-	public static function getLibraryScriptFilename()
+	// NB: Removed for release, scripts are now part of a Node package
+	/*public static function getLibraryScriptFilename()
 	{
 		return dirname(__DIR__) . '/lib/jquery.dataTables.min.js';
 	}
@@ -59,16 +60,7 @@ abstract class DataTable extends DOMDocument
 	public function getScriptFilename()
 	{
 		return dirname(__DIR__) . '/js/datatable.js';
-	}
-	
-	public function registerRoute()
-	{
-		Route::get( $this->getRoute(), function(Request $request) {
-			
-			return $this->getRecords($request);
-			
-		} );
-	}
+	}*/
 	
 	protected function getColumns()
 	{
@@ -94,6 +86,26 @@ abstract class DataTable extends DOMDocument
 		return $this->cachedColumns;
 	}
 	
+	protected function getSelectColumns()
+	{
+		$keys		= array_keys($this->getColumns());
+		$results	= [];
+		
+		foreach($this->getColumns() as $key => $value)
+		{
+			if(!isset($value['sql']))
+			{
+				$results []= $key;
+				continue;
+			}
+			
+			$expr	= DB::raw($value['sql']);
+			$results []= $expr;
+		}
+		
+		return $results;
+	}
+	
 	protected function initDocument()
 	{
 		$columns	= $this->getColumns();
@@ -116,6 +128,9 @@ EOD
 
 		foreach($columns as $key => $arr)
 		{
+			if(isset($arr['display']) && $arr['display'] == false)
+				continue;
+			
 			$th		= $this->createElement('th');
 			
 			$th->append($arr['caption']);
@@ -132,9 +147,15 @@ EOD
 		return DataTable::CONTEXT_WHERE;
 	}
 	
-	protected function isColumnSearchable($type)
+	protected function isColumnSearchable($definition)
 	{
-		return preg_match('/^VARCHAR|TEXT$|^INT/i', $type);
+		if(isset($definition['searchable']) && $definition['searchable'] == false)
+			return false;
+		
+		if(!isset($definition['type']))
+			return false;
+		
+		return preg_match('/^VARCHAR|TEXT$|^INT/i', $definition['type']);
 	}
 	
 	protected function applySearch(Request $request, Builder $builder)
@@ -142,7 +163,6 @@ EOD
 		if(!$request->has("search"))
 			return;
 		
-		// TODO: Support JSON input (including value and regex)
 		// TODO: Support multiple, space separated words
 		// TODO: Support REGEXP
 		
@@ -155,9 +175,9 @@ EOD
 		$context	= $this->getSearchContext();
 		$arr		= [];
 		
-		foreach($this->getColumns() as $key => $obj)
+		foreach($this->getColumns() as $key => $definition)
 		{
-			if(!$this->isColumnSearchable($obj['type']))
+			if(!$this->isColumnSearchable($definition))
 				continue;
 			
 			$builder->$context($key, "LIKE", "%$keyword%");
@@ -193,8 +213,9 @@ EOD
 	
 	public function getBuilder(Request $request)
 	{
-		$builder		= DB::table( $this->getTableName() )->
-			select( array_keys($this->getColumns()) );
+		$builder		= DB::table( $this->getTableName() )
+			->select([DB::raw("SQL_CALC_FOUND_ROWS ")])
+			->select($this->getSelectColumns());
 		
 		$this->applySearch($request, $builder);
 		$this->applyOrder($request, $builder);
@@ -207,7 +228,9 @@ EOD
 	{
 		$builder		= $this->getBuilder($request);
 		$result			= [
-			'data'	=> $builder->get()->toArray()
+			'data'				=> $builder->get()->toArray(),
+			'recordsFiltered'	=> DB::select("SELECT FOUND_ROWS()")[0]->{'FOUND_ROWS()'},
+			'recordsTotal'		=> DB::table($this->getTableName())->count(),
 		];
 		
 		if(env('APP_DEBUG'))
