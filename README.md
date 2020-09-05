@@ -1,6 +1,8 @@
 # DataTable
 
-This library handles client and server side record fetching, including search, sort and pagination.
+This library handles server side record fetching, including search, sort and pagination.
+
+If you're looking for the client side module to go with this, please see <https://github.com/PerryRylance/DataTable.js>
 
 A script file is provided for convenience which will automatically set up the tables client side also. Feel free to write your own, or extend `PerryRylance.DataTable` by overriding `createInstance`.
 
@@ -19,3 +21,4 @@ I recommend installing this via Composer:
 
 - Make a subclass of `PerryRylance\DataTable`.
 - You must implement the abstract method `getTableName`.
+- You must also implement the abstract method `getRoute`.
