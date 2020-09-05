@@ -40,27 +40,11 @@ abstract class DataTable extends DOMDocument
 		}
 		
 		if(!($request instanceof Request && $request->wantsJson()))
-			$this->initDocument();
+			$this->initDocument($options);
 	}
 	
 	abstract public function getTableName();
 	abstract public function getRoute();
-	
-	// NB: Removed for release, scripts are now part of a Node package
-	/*public static function getLibraryScriptFilename()
-	{
-		return dirname(__DIR__) . '/lib/jquery.dataTables.min.js';
-	}
-	
-	public static function getLibraryStyleFilename()
-	{
-		return dirname(__DIR__) . '/lib/jquery.dataTables.min.css';
-	}
-	
-	public function getScriptFilename()
-	{
-		return dirname(__DIR__) . '/js/datatable.js';
-	}*/
 	
 	protected function getColumns()
 	{
@@ -106,7 +90,7 @@ abstract class DataTable extends DOMDocument
 		return $results;
 	}
 	
-	protected function initDocument()
+	protected function initDocument(Array $options = [])
 	{
 		$columns	= $this->getColumns();
 		
@@ -122,7 +106,7 @@ EOD
 		);
 		
 		$table		= $this->querySelector("table");
-		$table->setAttribute('data-route', $this->getRoute());
+		$table->data('route', $this->getRoute());
 
 		$tr			= $this->querySelector("thead > tr");
 
@@ -135,11 +119,14 @@ EOD
 			
 			$th->append($arr['caption']);
 			
-			$th->setAttribute("data-column-field", $key);
-			$th->setAttribute("data-column-type", $arr['type']);
+			$th->data("column-field", $key);
+			$th->data("column-type", $arr['type']);
 			
 			$tr->append($th);
 		}
+		
+		if(isset($options['autoInitialize']) && $options['autoInitialize'] == false)
+			$table->data("auto-initialize", "false");
 	}
 	
 	protected function getSearchContext()

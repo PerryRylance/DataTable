@@ -19,4 +19,3 @@ I recommend installing this via Composer:
 
 - Make a subclass of `PerryRylance\DataTable`.
 - You must implement the abstract method `getTableName`.
-- You must also implement the abstract method `getRoute`.
